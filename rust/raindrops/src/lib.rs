@@ -10,11 +10,11 @@ pub fn sounder<'a>(div: u32, msg: &'a str) -> impl Fn(u32) -> Option<&'a str>
 }
 
 pub trait NonEmptyOr {
-    fn non_empty_or<'a, 'b: 'a>(self: &'a Self, alternative: &'b Self) -> &'a Self;
+    fn non_empty_or(self: Self, alternative: Self) -> Self;
 }
 
 impl NonEmptyOr for String {
-    fn non_empty_or<'a, 'b: 'a>(self: &'a Self, alternative: &'b Self) -> &'a Self {
+    fn non_empty_or(self: Self, alternative: Self) -> Self{
         if !self.is_empty() {
             return self;
         };
@@ -33,6 +33,5 @@ pub fn raindrops(n: u32) -> String {
         .filter_map(|f| f(n))
         .collect::<Vec<&str>>()
         .concat()
-        .non_empty_or(&n.to_string())
-        .to_owned()
+        .non_empty_or(n.to_string())
 }
