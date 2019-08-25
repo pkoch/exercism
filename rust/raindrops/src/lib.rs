@@ -1,22 +1,38 @@
-pub fn divmsg(div: u32, msg: &str, n: u32) -> String {
-    if n % div != 0 {
-        return String::new();
-    }
+pub fn sounder<'a>(div: u32, msg: &'a str) -> impl Fn(u32) -> Option<&'a str>
+{
+    move |n: u32|{
+        if n % div != 0 {
+            return None;
+        };
 
-    return String::from(msg);
+        Some(msg)
+    }
+}
+
+pub trait NonEmptyOr {
+    fn non_empty_or<'a, 'b: 'a>(self: &'a Self, alternative: &'b Self) -> &'a Self;
+}
+
+impl NonEmptyOr for String {
+    fn non_empty_or<'a, 'b: 'a>(self: &'a Self, alternative: &'b Self) -> &'a Self {
+        if !self.is_empty() {
+            return self;
+        };
+
+        alternative
+    }
 }
 
 pub fn raindrops(n: u32) -> String {
-    let msg = [
-        divmsg(3, "Pling", n),
-        divmsg(5, "Plang", n),
-        divmsg(7, "Plong", n),
+    [
+        sounder(3, "Pling"),
+        sounder(5, "Plang"),
+        sounder(7, "Plong"),
     ]
-    .join("");
-
-    if !msg.is_empty() {
-        return msg;
-    };
-
-    n.to_string()
+        .iter()
+        .filter_map(|f| f(n))
+        .collect::<Vec<&str>>()
+        .concat()
+        .non_empty_or(&n.to_string())
+        .to_owned()
 }
