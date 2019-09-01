@@ -1,6 +1,5 @@
 pub fn reply(message: &str) -> &str {
-    let mut s = message.to_string();
-    s.retain(|c| !c.is_whitespace());
+    let s = message.trim();
 
     if s.is_empty() {
         return "Fine. Be that way!"
