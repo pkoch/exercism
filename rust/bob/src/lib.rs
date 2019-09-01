@@ -5,7 +5,7 @@ pub fn reply(message: &str) -> &str {
         return "Fine. Be that way!"
     }
 
-    let is_all_caps = s == s.to_uppercase() && s != s.to_lowercase();
+    let is_all_caps = s.chars().any(char::is_alphabetic) && s.to_uppercase() == s;
     let is_question = s.ends_with("?");
     match (is_question, is_all_caps) {
         (true, true) => "Calm down, I know what I'm doing!",
