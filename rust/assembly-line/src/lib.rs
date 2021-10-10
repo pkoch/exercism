@@ -1,4 +1,4 @@
-static TOTAL_CARS_PER_HOUR: u32 = 221;
+static TOTAL_CARS_PER_HOUR: f64 = 221.0;
 
 pub fn success_rate(speed: u8) -> f64 {
     match speed {
@@ -11,7 +11,7 @@ pub fn success_rate(speed: u8) -> f64 {
 }
 
 pub fn production_rate_per_hour(speed: u8) -> f64 {
-    speed as f64 * TOTAL_CARS_PER_HOUR as f64 * success_rate(speed)
+    speed as f64 * TOTAL_CARS_PER_HOUR * success_rate(speed)
 }
 
 pub fn working_items_per_minute(speed: u8) -> u32 {
