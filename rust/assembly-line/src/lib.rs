@@ -1,11 +1,19 @@
-// This stub file contains items which aren't used yet; feel free to remove this module attribute
-// to enable stricter warnings.
-#![allow(unused)]
+static TOTAL_CARS_PER_HOUR: u32 = 221;
+
+pub fn success_rate(speed: u8) -> f64 {
+    match speed {
+        0 => 0.00,
+        1..=4 => 1.00,
+        5..=8 => 0.90,
+        9..=10 => 0.77,
+        _ => panic!("Undefined fault rate for {}", speed)
+    }
+}
 
 pub fn production_rate_per_hour(speed: u8) -> f64 {
-    unimplemented!("calculate hourly production rate at speed: {}", speed)
+    speed as f64 * TOTAL_CARS_PER_HOUR as f64 * success_rate(speed)
 }
 
 pub fn working_items_per_minute(speed: u8) -> u32 {
-    unimplemented!("calculate the amount of working items at speed: {}", speed)
+    production_rate_per_hour(speed).round() as u32 / 60
 }
