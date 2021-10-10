@@ -1,18 +1,20 @@
+#[macro_use]
+extern crate lazy_static;
+
 use std::collections::HashMap;
 
-fn forward() -> Vec<char> {
-    (b'a'..=b'z')
+lazy_static! {
+    static ref FORWARD: Vec<char> = (b'a'..=b'z')
         .chain(b'0'..=b'9')
         .map(|a| a as char)
-        .collect()
-}
-
-fn backward() -> Vec<char> {
-    (b'a'..=b'z')
+        .collect();
+    static ref BACKWARD: Vec<char> = (b'a'..=b'z')
         .rev()
         .chain(b'0'..=b'9')
         .map(|a| a as char)
-        .collect()
+        .collect();
+    static ref TABLE: HashMap<&'static char, &'static char> =
+        FORWARD.iter().zip(BACKWARD.iter()).collect();
 }
 
 /// "Encipher" with the Atbash cipher.
@@ -38,15 +40,9 @@ pub fn decode(cipher: &str) -> String {
 }
 
 pub fn atbash_str(s: &str) -> String {
-    s.to_lowercase()
-        .chars()
-        .filter_map(atbash_char)
+    s.chars()
+        .filter_map(|c| {
+            TABLE.get(&c.to_ascii_lowercase()).cloned()
+        })
         .collect::<String>()
-}
-
-pub fn atbash_char(c: char) -> Option<char> {
-    // I wish I could easily make this static.
-    let table: HashMap<char, char> = forward().into_iter().zip(backward()).collect();
-
-    table.get(&c).map(|a| *a)
 }

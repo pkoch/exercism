@@ -76,3 +76,11 @@ fn test_decode_all_the_letters() {
         cipher::decode("gsvjf rxpyi ldmul cqfnk hlevi gsvoz abwlt")
     );
 }
+
+#[test]
+fn test_ambiguous_bytes() {
+    assert_eq!(
+        "gvhgr mt123 gvhgr mt",
+        cipher::encode("Testing\u{0130},1 2 3, testing.")
+    )
+}
