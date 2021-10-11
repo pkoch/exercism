@@ -3,8 +3,7 @@ use unicode_segmentation::UnicodeSegmentation;
 
 fn sorted_chars(s: &str) -> String {
     let mut v = s.graphemes(true)
-        .map(|a| a.to_lowercase())
-        .collect::<Vec<String>>();
+        .collect::<Vec<_>>();
     v.sort();
     v.join("")
 }
@@ -16,7 +15,7 @@ pub fn anagrams_for<'a>(word: &str, possible_anagrams: &'a [&str]) -> HashSet<&'
         .iter()
         .filter(|s| {
             let sl = s.to_lowercase();
-            sl != lower_word && sorted_chars(&sl) == sorted_chars(word)
+            sl != lower_word && sorted_chars(&sl) == sorted_chars(&lower_word)
         })
         .map(|a| *a)
         .collect::<HashSet<&str>>()
