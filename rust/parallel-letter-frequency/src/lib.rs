@@ -20,7 +20,7 @@ pub fn merge_counts(mut a: HashMap<char, usize>, b: &HashMap<char, usize>) -> Ha
 
 pub fn into_clean_sting(s: &str) -> String {
     let mut s_ = s.to_lowercase();
-    s_.retain(|c| !r#"(),".;:'1234567890"#.contains(c));
+    s_.retain(|c| c.is_alphabetic());
     s_
 }
 
