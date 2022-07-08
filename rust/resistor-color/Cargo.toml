@@ -4,5 +4,4 @@ name = "resistor-color"
 version = "1.0.0"
 
 [dependencies]
-int-enum = "0.4.0"
-enum-iterator = "1.1.1"
+strum = { version = "0.24", features = ["derive"] }
