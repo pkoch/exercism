@@ -1,6 +1,8 @@
 use std::collections::HashMap;
 use std::thread;
 
+const INTIAL_CAPACITY: usize = 30;
+
 pub fn char_count(chunk: Vec<String>) -> HashMap<char, usize> {
     chunk
         .iter()
@@ -9,7 +11,7 @@ pub fn char_count(chunk: Vec<String>) -> HashMap<char, usize> {
                 .filter(|c| c.is_alphabetic())
                 .map(|c| c.to_ascii_lowercase())
         })
-        .fold(HashMap::new(), |mut a, c| {
+        .fold(HashMap::with_capacity(INTIAL_CAPACITY), |mut a, c| {
             *a.entry(c).or_default() += 1;
             a
         })
@@ -29,7 +31,7 @@ pub fn frequency(input: &[&str], worker_count: usize) -> HashMap<char, usize> {
             let v = chunk.iter().map(|s| s.to_string()).collect::<Vec<_>>();
             thread::spawn(move || char_count(v))
         })
-        .fold(HashMap::<char, usize>::new(), |a, h| {
+        .fold(HashMap::<char, usize>::with_capacity(INTIAL_CAPACITY), |a, h| {
             merge_counts(a, &h.join().unwrap())
         })
 }
