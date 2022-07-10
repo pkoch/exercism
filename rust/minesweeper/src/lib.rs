@@ -22,7 +22,7 @@ pub fn sorrounding_coordinates(
     ][..];
     positions
         .iter()
-        .filter(|(x, y)| 0 <= *x && *x <= line_len_ && 0 <= *y && *y <= line_count_)
+        .filter(|(x, y)| 0 <= *x && *x < line_len_ && 0 <= *y && *y < line_count_)
         .map(|(x, y)| (usize::try_from(*x).unwrap(), usize::try_from(*y).unwrap()))
         .collect()
 }
@@ -46,7 +46,7 @@ pub fn annotate(minefield: &[&str]) -> Vec<String> {
 
             let mine_count = sorrounding_coordinates(x, y, line_len, line_count)
                 .iter()
-                .filter(|(x, y)| lines.get(*y).unwrap_or(&&[(0 as u8)][..]).get(*x).unwrap_or(&0) == &('*' as u8))
+                .filter(|(x, y)| lines[*y][*x] == ('*' as u8))
                 .count();
             let new_symbol = if mine_count == 0 {
                 ' '
