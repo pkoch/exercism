@@ -28,17 +28,16 @@ pub fn sorrounding_coordinates(
 }
 
 pub fn annotate(minefield: &[&str]) -> Vec<String> {
-    if minefield.len() == 0 {
+    let line_count = minefield.len();
+    if line_count == 0 {
         return vec![];
     }
 
-    let line_count = minefield.len();
     let line_len = minefield.get(0).unwrap().len();
-    let mut result = vec![vec![' '; line_len]; line_count];
 
-    for (y, line) in minefield.iter().enumerate() {
-        for (x, pos) in line.as_bytes().iter().enumerate() {
-            result[y][x] = if *pos == ('*' as u8) {
+    minefield.iter().enumerate().map(|(y, line)| {
+        line.as_bytes().iter().enumerate().map(|(x, pos)| {
+            if *pos == ('*' as u8) {
                 '*'
             }else{
                 let mine_count: u8 = sorrounding_coordinates(x, y, line_len, line_count)
@@ -50,11 +49,7 @@ pub fn annotate(minefield: &[&str]) -> Vec<String> {
                     0 => ' ',
                     n => (('0' as u8) + n) as char
                 }
-            };
-        }
-    }
-    result
-        .iter()
-        .map(|line| line.into_iter().collect())
-        .collect()
+            }
+        }).collect()
+    }).collect()
 }
