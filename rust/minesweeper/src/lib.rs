@@ -35,21 +35,31 @@ pub fn annotate(minefield: &[&str]) -> Vec<String> {
 
     let line_len = minefield.get(0).unwrap().len();
 
-    minefield.iter().enumerate().map(|(y, line)| {
-        line.as_bytes().iter().enumerate().map(|(x, pos)| {
-            if *pos == ('*' as u8) {
-                '*'
-            }else{
-                let mine_count: u8 = sorrounding_coordinates(x, y, line_len, line_count)
-                    .iter()
-                    .filter(|(x, y)| minefield[*y].as_bytes()[*x] == ('*' as u8))
-                    .count().try_into().unwrap();
+    minefield
+        .iter()
+        .enumerate()
+        .map(|(y, line)| {
+            line.as_bytes()
+                .iter()
+                .enumerate()
+                .map(|(x, pos)| {
+                    if *pos == ('*' as u8) {
+                        '*'
+                    } else {
+                        let mine_count: u8 = sorrounding_coordinates(x, y, line_len, line_count)
+                            .iter()
+                            .filter(|(x, y)| minefield[*y].as_bytes()[*x] == ('*' as u8))
+                            .count()
+                            .try_into()
+                            .unwrap();
 
-                match mine_count {
-                    0 => ' ',
-                    n => (('0' as u8) + n) as char
-                }
-            }
-        }).collect()
-    }).collect()
+                        match mine_count {
+                            0 => ' ',
+                            n => (('0' as u8) + n) as char,
+                        }
+                    }
+                })
+                .collect()
+        })
+        .collect()
 }
