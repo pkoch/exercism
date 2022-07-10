@@ -1,5 +1,3 @@
-use std::cmp::min;
-
 #[derive(Debug, PartialEq)]
 pub enum Comparison {
     Equal,
@@ -8,41 +6,18 @@ pub enum Comparison {
     Unequal,
 }
 
-pub fn first_positions<T: PartialOrd>(l: &[T], target: &T) -> Vec<usize> {
-    l.iter()
-        .enumerate()
-        .filter(|(_i, v)| *v == target)
-        .map(|(i, _v)| i)
-        .collect()
-}
-
-pub fn shared_prefix_len<T: PartialOrd>(la: &[T], lb: &[T]) -> usize {
-    let mut it = la
-        .iter()
-        .zip(lb)
-        .enumerate()
-        .skip_while(|(_i, (a, b))| *a == *b);
-
-    match it.next() {
-        Some((i, _)) => i - 1,
-        None => min(la.len(), lb.len()),
-    }
-}
-
 pub fn is_substreak_of<T: PartialOrd>(a: &[T], b: &[T]) -> bool {
-    if a.len() == 0 {
+    let len_a = a.len();
+    let len_b = b.len();
+
+    if len_a == 0 {
         return true;
     }
-    if b.len() == 0 {
+    if len_b == 0 {
         return false;
     }
-    let &first_a = &a.get(0).unwrap();
-    let len_a = a.len();
 
-    first_positions(b, first_a)
-        .iter()
-        .map(|n| &b[*n..])
-        .any(|bi| shared_prefix_len(a, bi) == len_a)
+    b.windows(len_a).any(|candidate| a == candidate)
 }
 
 pub fn sublist<T: PartialOrd>(first_list: &[T], second_list: &[T]) -> Comparison {
