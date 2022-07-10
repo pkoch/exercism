@@ -34,19 +34,18 @@ pub fn annotate(minefield: &[&str]) -> Vec<String> {
 
     let line_count = minefield.len();
     let line_len = minefield.get(0).unwrap().len();
-    let mut result = vec![vec![32; line_len]; line_count];
+    let mut result = vec![vec![' '; line_len]; line_count];
 
-    let lines = &minefield.iter().map(|l| l.as_bytes()).collect::<Vec<_>>()[..];
-    for (y, line) in lines.iter().enumerate() {
-        for (x, pos) in line.iter().enumerate() {
+    for (y, line) in minefield.iter().enumerate() {
+        for (x, pos) in line.as_bytes().iter().enumerate() {
             if *pos == ('*' as u8) {
-                result[y][x] = *pos;
+                result[y][x] = *pos as char;
                 continue;
             }
 
             let mine_count: u8 = sorrounding_coordinates(x, y, line_len, line_count)
                 .iter()
-                .filter(|(x, y)| lines[*y][*x] == ('*' as u8))
+                .filter(|(x, y)| minefield[*y].as_bytes()[*x] == ('*' as u8))
                 .count().try_into().unwrap();
             let new_symbol = if mine_count == 0 {
                 ' '
@@ -54,11 +53,11 @@ pub fn annotate(minefield: &[&str]) -> Vec<String> {
                 (('0' as u8) + mine_count) as char
             };
 
-            result[y][x] = new_symbol as u8;
+            result[y][x] = new_symbol;
         }
     }
     result
         .iter()
-        .map(|line| String::from_utf8_lossy(line).to_string())
+        .map(|line| line.into_iter().collect())
         .collect()
 }
