@@ -44,14 +44,14 @@ pub fn annotate(minefield: &[&str]) -> Vec<String> {
                 continue;
             }
 
-            let mine_count = sorrounding_coordinates(x, y, line_len, line_count)
+            let mine_count: u8 = sorrounding_coordinates(x, y, line_len, line_count)
                 .iter()
                 .filter(|(x, y)| lines[*y][*x] == ('*' as u8))
-                .count();
+                .count().try_into().unwrap();
             let new_symbol = if mine_count == 0 {
                 ' '
             } else {
-                mine_count.to_string().chars().next().unwrap()
+                (('0' as u8) + mine_count) as char
             };
 
             result[y][x] = new_symbol as u8;
