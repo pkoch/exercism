@@ -1,6 +1,7 @@
 // I wish I could use creates. :(
 
 use std::{
+    cmp::Reverse,
     collections::{HashMap, HashSet},
     fmt,
 };
@@ -25,31 +26,6 @@ pub enum Rank {
     Queen,
     King,
     Ace,
-}
-
-impl fmt::Display for Rank {
-    /// ```
-    /// # use poker::*;
-    /// assert_eq!(Rank::try_from("A").unwrap().to_string(), "A");
-    /// ```
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", match self {
-            Rank::Two => "2",
-            Rank::Three => "3",
-            Rank::Four => "4",
-            Rank::Five => "5",
-            Rank::Six => "6",
-            Rank::Seven => "7",
-            Rank::Eight => "8",
-            Rank::Nine => "9",
-            Rank::Ten => "10",
-            Rank::Jack => "J",
-            Rank::Queen => "Q",
-            Rank::King => "K",
-            Rank::Ace => "A",
-            Rank::AceLow => "A",
-        })
-    }
 }
 
 impl TryFrom<&str> for Rank {
@@ -81,6 +57,35 @@ impl TryFrom<&str> for Rank {
     }
 }
 
+impl fmt::Display for Rank {
+    /// ```
+    /// # use poker::*;
+    /// assert_eq!(Rank::try_from("A").unwrap().to_string(), "A");
+    /// ```
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "{}",
+            match self {
+                Rank::Two => "2",
+                Rank::Three => "3",
+                Rank::Four => "4",
+                Rank::Five => "5",
+                Rank::Six => "6",
+                Rank::Seven => "7",
+                Rank::Eight => "8",
+                Rank::Nine => "9",
+                Rank::Ten => "10",
+                Rank::Jack => "J",
+                Rank::Queen => "Q",
+                Rank::King => "K",
+                Rank::Ace => "A",
+                Rank::AceLow => "A",
+            }
+        )
+    }
+}
+
 #[derive(Copy, Clone, Debug, Hash, PartialEq, Eq, PartialOrd, Ord)]
 #[repr(u8)]
 pub enum Suit {
@@ -88,22 +93,6 @@ pub enum Suit {
     Diamonds = 'D' as u8,
     Hearts = 'H' as u8,
     Spades = 'S' as u8,
-}
-
-impl Into<char> for Suit {
-    fn into(self) -> char {
-        self as u8 as char
-    }
-}
-
-impl fmt::Display for Suit {
-    /// ```
-    /// # use poker::*;
-    /// assert_eq!(Suit::try_from('S').unwrap().to_string(), "S");
-    /// ```
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", char::from(*self as u8 as char).to_string())
-    }
 }
 
 impl TryFrom<char> for Suit {
@@ -117,6 +106,16 @@ impl TryFrom<char> for Suit {
             'S' => Ok(Suit::Spades),
             _ => Err(Undecodable(format!("{:?}: not a Suit", s))),
         }
+    }
+}
+
+impl fmt::Display for Suit {
+    /// ```
+    /// # use poker::*;
+    /// assert_eq!(Suit::try_from('S').unwrap().to_string(), "S");
+    /// ```
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", char::from(*self as u8 as char).to_string())
     }
 }
 
@@ -144,17 +143,6 @@ pub struct Card {
     pub suit: Suit,
 }
 
-impl fmt::Display for Card {
-    /// ```
-    /// # use poker::*;
-    /// let source = "AS";
-    /// assert_eq!(Card::try_from(source).unwrap().to_string(), source);
-    /// ```
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}{}", self.rank, self.suit)
-    }
-}
-
 impl TryFrom<&str> for Card {
     type Error = Undecodable;
 
@@ -168,28 +156,20 @@ impl TryFrom<&str> for Card {
     }
 }
 
+impl fmt::Display for Card {
+    /// ```
+    /// # use poker::*;
+    /// let source = "AS";
+    /// assert_eq!(Card::try_from(source).unwrap().to_string(), source);
+    /// ```
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}{}", self.rank, self.suit)
+    }
+}
+
 #[derive(Copy, Clone, Debug, Hash, PartialEq, Eq)]
 pub struct Hand {
     pub cards: [Card; 5],
-}
-
-/// ```
-/// # use poker::*;
-/// let source = "AS 2S 3S 4S 5S";
-/// assert_eq!(Hand::try_from(source).unwrap().to_string(), source);
-/// ```
-impl fmt::Display for Hand {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(
-            f,
-            "{}",
-            self.cards
-                .iter()
-                .map(|c| c.to_string())
-                .collect::<Vec<_>>()
-                .join(" ")
-        )
-    }
 }
 
 impl TryFrom<&str> for Hand {
@@ -236,6 +216,25 @@ impl TryFrom<&str> for Hand {
 }
 
 /// ```
+/// # use poker::*;
+/// let source = "AS 2S 3S 4S 5S";
+/// assert_eq!(Hand::try_from(source).unwrap().to_string(), source);
+/// ```
+impl fmt::Display for Hand {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "{}",
+            self.cards
+                .iter()
+                .map(|c| c.to_string())
+                .collect::<Vec<_>>()
+                .join(" ")
+        )
+    }
+}
+
+/// ```
 /// # use poker::{*, Rank, Rank::*};
 /// fn consecutive_(s: &str) -> Option<Rank> {
 ///   consecutive(&Hand::try_from(s).unwrap().cards)
@@ -248,7 +247,7 @@ impl TryFrom<&str> for Hand {
 /// assert_eq!(consecutive_("AC 3C 5C 7C 9C"), None);
 /// ```
 pub fn consecutive(cards: &[Card; 5]) -> Option<Rank> {
-    let ranks = cards
+    let ranks: Vec<Rank> = cards
         .iter()
         .map(|Card { rank, suit: _ }| *rank)
         .collect::<Vec<_>>();
@@ -257,7 +256,7 @@ pub fn consecutive(cards: &[Card; 5]) -> Option<Rank> {
         return None;
     }
 
-    let mut possibilities = vec![ranks];
+    let mut possibilities: Vec<Vec<Rank>> = vec![ranks];
     let ranks_ = possibilities.first().unwrap();
     if ranks_.contains(&Rank::Ace) {
         let mut alt = ranks_.clone();
@@ -267,19 +266,15 @@ pub fn consecutive(cards: &[Card; 5]) -> Option<Rank> {
     }
 
     for v in possibilities.iter_mut() {
-        v.sort()
-    }
-
-    for p in possibilities{
-
-        if p.windows(2).all(|w| {
+        v.sort();
+        if v.windows(2).all(|w| {
             if let [a, b] = w {
                 (*a as u8) + 1 == (*b as u8)
             } else {
                 false
             }
         }) {
-            return Some(p[4]);
+            return Some(v[4]);
         }
     }
 
@@ -305,21 +300,29 @@ pub fn same_suit(cards: &[Card]) -> bool {
 }
 
 /// ```
-/// # use poker::*;
-/// fn same_rank_4(s: &str) -> bool {
-///   same_rank(&Hand::try_from(s).unwrap().cards[0..3])
-/// }
-///
-/// assert!(same_rank_4("2C 2S 2D 2H AS"));
-/// assert!(!same_rank_4("2C 2S 3D 3H AS"));
+/// # use poker::{tally_ranks, Undecodable, Card, Hand, Suit::*, Rank::*};
+/// assert_eq!(
+///     tally_ranks(&Hand::try_from("KC KH QC QH JC").unwrap().cards),
+///     vec![
+///         (2, King),
+///         (2, Queen),
+///         (1, Jack),
+///     ],
+/// );
 /// ```
-pub fn same_rank(cards: &[Card]) -> bool {
-    cards
+pub fn tally_ranks(cards: &[Card]) -> Vec<(usize, Rank)> {
+    let mut res: Vec<(usize, Rank)> = cards
         .iter()
-        .map(|Card { rank, suit: _ }| rank)
-        .collect::<HashSet<_>>()
-        .len()
-        == 1
+        .map(|c| c.rank)
+        .fold(HashMap::<Rank, usize>::new(), |mut h, r| {
+            *h.entry(r).or_default() += 1;
+            h
+        })
+        .into_iter()
+        .map(|(r, s)| (s, r))
+        .collect();
+    res.sort_by_key(|k| Reverse(*k));
+    res
 }
 
 #[derive(Clone, Debug, Hash, PartialEq, Eq, PartialOrd, Ord)]
@@ -359,32 +362,6 @@ pub enum HandScore {
     },
 }
 
-/// ```
-/// # use poker::{tally_ranks, Undecodable, Card, Hand, Suit::*, Rank::*};
-/// assert_eq!(
-///     tally_ranks(&Hand::try_from("KC KH QC QH JC").unwrap().cards),
-///     vec![
-///         (2, King),
-///         (2, Queen),
-///         (1, Jack),
-///     ],
-/// );
-/// ```
-pub fn tally_ranks(cards: &[Card]) -> Vec<(usize, Rank)> {
-    let mut res: Vec<(usize, Rank)> = cards
-        .iter()
-        .map(|c| c.rank)
-        .fold(HashMap::<Rank, usize>::new(), |mut h, r| {
-            *h.entry(r).or_default() += 1;
-            h
-        })
-        .into_iter()
-        .map(|(r, s)| (s, r))
-        .collect();
-    res.sort_by(|a, b| b.cmp(a));
-    res
-}
-
 impl From<Hand> for HandScore {
     /// ```
     /// # use poker::{Hand, HandScore, HandScore::*, Rank::*};
@@ -402,65 +379,41 @@ impl From<Hand> for HandScore {
     fn from(h: Hand) -> Self {
         let mut cards = h.cards;
         cards.sort();
-        let same_suit = same_suit(&cards);
-        let straight_high = consecutive(&cards);
-        let tally = &tally_ranks(&cards)[..];
+        let ranks = cards.iter().map(|c| c.rank).collect::<Vec<_>>();
 
-        if let Some(top_rank) = straight_high {
-            if same_suit {
-                return HandScore::StraightFlush {
-                    top_rank,
-                };
-            };
-        };
-
-        if let [(4, top_rank), (1, bottom_rank)] = tally {
-            return HandScore::FourOfAKind {
-                top_rank: *top_rank,
-                bottom_rank: *bottom_rank,
-            };
+        match (consecutive(&cards), same_suit(&cards)) {
+            (Some(top_rank), true) => return HandScore::StraightFlush { top_rank },
+            (None, true) => return HandScore::Flush { ranks },
+            (Some(top_rank), false) => return HandScore::Straight { top_rank },
+            _ => (),
         }
 
-        if let [(3, top_rank), (2, bottom_rank)] = tally {
-            return HandScore::FullHouse {
+        match &tally_ranks(&cards)[..] {
+            [(4, top_rank), (1, bottom_rank)] => HandScore::FourOfAKind {
                 top_rank: *top_rank,
                 bottom_rank: *bottom_rank,
-            };
-        }
-
-        if same_suit {
-            let ranks = cards.iter().map(|c| c.rank).collect::<Vec<_>>();
-            return HandScore::Flush { ranks };
-        };
-
-        if let Some(top_rank) = straight_high {
-            return HandScore::Straight {top_rank};
-        };
-
-        if let [(3, top_rank), (1, other_rank_1), (1, other_rank_2)] = tally {
-            return HandScore::ThreeOfAKind {
+            },
+            [(3, top_rank), (2, bottom_rank)] => HandScore::FullHouse {
+                top_rank: *top_rank,
+                bottom_rank: *bottom_rank,
+            },
+            [(3, top_rank), (1, other_rank_1), (1, other_rank_2)] => HandScore::ThreeOfAKind {
                 top_rank: *top_rank,
                 other_ranks: vec![*other_rank_1, *other_rank_2],
-            };
-        }
-
-        if let [(2, top_rank), (2, second_rank), (1, other_rank)] = tally {
-            return HandScore::TwoPair {
+            },
+            [(2, top_rank), (2, second_rank), (1, other_rank)] => HandScore::TwoPair {
                 top_rank: *top_rank,
                 second_rank: *second_rank,
                 other_rank: *other_rank,
-            };
+            },
+            [(2, top_rank), (1, other_rank_1), (1, other_rank_2), (1, other_rank_3)] => {
+                HandScore::OnePair {
+                    top_rank: *top_rank,
+                    other_ranks: vec![*other_rank_1, *other_rank_2, *other_rank_3],
+                }
+            }
+            _ => HandScore::HighCard { ranks },
         }
-
-        if let [(2, top_rank), (1, other_rank_1), (1, other_rank_2), (1, other_rank_3)] = tally {
-            return HandScore::OnePair {
-                top_rank: *top_rank,
-                other_ranks: vec![*other_rank_1, *other_rank_2, *other_rank_3],
-            };
-        }
-
-        let ranks = cards.iter().map(|c| c.rank).collect::<Vec<_>>();
-        HandScore::HighCard { ranks }
     }
 }
 
@@ -471,8 +424,11 @@ impl From<&str> for HandScore {
 }
 
 pub fn winning_hands<'a>(hands: &[&'a str]) -> Vec<&'a str> {
-    let mut hs: Vec<(HandScore, &str)> =
-        hands.iter().map(|h| (HandScore::from(*h), *h)).collect();
+    if hands.len() == 0 {
+        return vec![];
+    }
+
+    let mut hs: Vec<(HandScore, &str)> = hands.iter().map(|h| (HandScore::from(*h), *h)).collect();
     hs.sort();
     let highest_score = hs.last().unwrap().0.clone();
     hs.retain(|(s, _)| *s == highest_score);
