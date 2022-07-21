@@ -35,6 +35,7 @@ impl TryFrom<&str> for Rank {
     /// # use poker::*;
     /// assert_eq!(Rank::try_from("2"), Ok(Rank::Two));
     /// assert_eq!(Rank::try_from("10"), Ok(Rank::Ten));
+    /// assert_eq!(Rank::try_from("K"), Ok(Rank::King));
     /// assert_eq!(Rank::try_from("?"), Err(Undecodable("\"?\": not a Rank".to_string())));
     /// ```
     fn try_from(s: &str) -> Result<Self, Self::Error> {
@@ -98,6 +99,11 @@ pub enum Suit {
 impl TryFrom<char> for Suit {
     type Error = Undecodable;
 
+    /// ```
+    /// # use poker::*;
+    /// assert_eq!(Suit::try_from('D'), Ok(Suit::Diamonds));
+    /// assert_eq!(Suit::try_from('?'), Err(Undecodable("'?': not a Suit".to_string())));
+    /// ```
     fn try_from(s: char) -> Result<Self, Self::Error> {
         match s {
             'D' => Ok(Suit::Diamonds),
@@ -146,9 +152,22 @@ pub struct Card {
 impl TryFrom<&str> for Card {
     type Error = Undecodable;
 
+    /// ```
+    /// # use poker::{*, Undecodable, Card, Rank::*, Suit::*};
+    /// assert_eq!(Card::try_from("AS"), Ok(Card{rank: Ace, suit: Spades}));
+    /// assert_eq!(Card::try_from("A"), Err(Undecodable("\"A\": expected to be at least two chars".to_string())));
+    /// ```
     fn try_from(s: &str) -> Result<Self, Self::Error> {
         let mut chrs = s.chars().collect::<Vec<_>>();
+
+        if chrs.len() < 2 {
+            return Err(Undecodable(format!(
+                "{:?}: expected to be at least two chars",
+                s
+            )));
+        }
         let st = chrs.pop().unwrap();
+
         Ok(Card {
             rank: Rank::try_from(chrs.iter().collect::<String>().as_str())?,
             suit: Suit::try_from(st)?,
@@ -159,8 +178,7 @@ impl TryFrom<&str> for Card {
 impl fmt::Display for Card {
     /// ```
     /// # use poker::*;
-    /// let source = "AS";
-    /// assert_eq!(Card::try_from(source).unwrap().to_string(), source);
+    /// assert_eq!(Card::try_from("AS").unwrap().to_string(), "AS");
     /// ```
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}{}", self.rank, self.suit)
@@ -215,12 +233,12 @@ impl TryFrom<&str> for Hand {
     }
 }
 
-/// ```
-/// # use poker::*;
-/// let source = "AS 2S 3S 4S 5S";
-/// assert_eq!(Hand::try_from(source).unwrap().to_string(), source);
-/// ```
 impl fmt::Display for Hand {
+    /// ```
+    /// # use poker::*;
+    /// let source = "AS 2S 3S 4S 5S";
+    /// assert_eq!(Hand::try_from(source).unwrap().to_string(), source);
+    /// ```
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
             f,
@@ -257,7 +275,7 @@ pub fn consecutive(cards: &[Card; 5]) -> Option<Rank> {
     }
 
     let mut possibilities: Vec<Vec<Rank>> = vec![ranks];
-    let ranks_ = possibilities.first().unwrap();
+    let ranks_ = &possibilities[0];
     if ranks_.contains(&Rank::Ace) {
         let mut alt = ranks_.clone();
         alt.retain(|e| *e != Rank::Ace);
