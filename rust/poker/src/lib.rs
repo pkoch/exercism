@@ -381,38 +381,40 @@ impl From<Hand> for HandScore {
         cards.sort();
         let ranks = cards.iter().map(|c| c.rank).collect::<Vec<_>>();
 
-        match (consecutive(&cards), same_suit(&cards)) {
-            (Some(top_rank), true) => return HandScore::StraightFlush { top_rank },
-            (None, true) => return HandScore::Flush { ranks },
-            (Some(top_rank), false) => return HandScore::Straight { top_rank },
-            _ => (),
-        }
-
-        match &tally_ranks(&cards)[..] {
-            [(4, top_rank), (1, bottom_rank)] => HandScore::FourOfAKind {
+        match (
+            consecutive(&cards),
+            same_suit(&cards),
+            &tally_ranks(&cards)[..],
+        ) {
+            (Some(top_rank), true, _) => HandScore::StraightFlush { top_rank },
+            (_, _, [(4, top_rank), (1, bottom_rank)]) => HandScore::FourOfAKind {
                 top_rank: *top_rank,
                 bottom_rank: *bottom_rank,
             },
-            [(3, top_rank), (2, bottom_rank)] => HandScore::FullHouse {
+            (_, _, [(3, top_rank), (2, bottom_rank)]) => HandScore::FullHouse {
                 top_rank: *top_rank,
                 bottom_rank: *bottom_rank,
             },
-            [(3, top_rank), (1, other_rank_1), (1, other_rank_2)] => HandScore::ThreeOfAKind {
-                top_rank: *top_rank,
-                other_ranks: vec![*other_rank_1, *other_rank_2],
-            },
-            [(2, top_rank), (2, second_rank), (1, other_rank)] => HandScore::TwoPair {
+            (None, true, _) => HandScore::Flush { ranks },
+            (Some(top_rank), false, _) => HandScore::Straight { top_rank },
+            (_, _, [(3, top_rank), (1, other_rank_1), (1, other_rank_2)]) => {
+                HandScore::ThreeOfAKind {
+                    top_rank: *top_rank,
+                    other_ranks: vec![*other_rank_1, *other_rank_2],
+                }
+            }
+            (_, _, [(2, top_rank), (2, second_rank), (1, other_rank)]) => HandScore::TwoPair {
                 top_rank: *top_rank,
                 second_rank: *second_rank,
                 other_rank: *other_rank,
             },
-            [(2, top_rank), (1, other_rank_1), (1, other_rank_2), (1, other_rank_3)] => {
+            (_, _, [(2, top_rank), (1, other_rank_1), (1, other_rank_2), (1, other_rank_3)]) => {
                 HandScore::OnePair {
                     top_rank: *top_rank,
                     other_ranks: vec![*other_rank_1, *other_rank_2, *other_rank_3],
                 }
             }
-            _ => HandScore::HighCard { ranks },
+            (_, _, _) => HandScore::HighCard { ranks },
         }
     }
 }
