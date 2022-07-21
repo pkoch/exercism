@@ -261,19 +261,13 @@ pub fn consecutive(cards: &[Card; 5]) -> Option<Rank> {
     if ranks_.contains(&Rank::Ace) {
         let mut alt = ranks_.clone();
         alt.retain(|e| *e != Rank::Ace);
-        alt.push(Rank::AceLow); // An Ace can also go before a Two.
+        alt.push(Rank::AceLow);
         possibilities.push(alt);
     }
 
     for v in possibilities.iter_mut() {
         v.sort();
-        if v.windows(2).all(|w| {
-            if let [a, b] = w {
-                (*a as u8) + 1 == (*b as u8)
-            } else {
-                false
-            }
-        }) {
+        if v.windows(2).all(|w| (w[0] as u8) + 1 == (w[1] as u8)) {
             return Some(v[4]);
         }
     }
