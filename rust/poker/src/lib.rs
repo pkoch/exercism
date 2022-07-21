@@ -20,64 +20,62 @@ pub enum Rank {
     Seven,
     Eight,
     Nine,
+    Ten,
     Jack,
     Queen,
     King,
     Ace,
 }
 
-impl From<Rank> for char {
-    fn from(r: Rank) -> Self {
-        match r {
-            Rank::Two => '2',
-            Rank::Three => '3',
-            Rank::Four => '4',
-            Rank::Five => '5',
-            Rank::Six => '6',
-            Rank::Seven => '7',
-            Rank::Eight => '8',
-            Rank::Nine => '9',
-            Rank::Jack => 'J',
-            Rank::Queen => 'Q',
-            Rank::King => 'K',
-            Rank::Ace => 'A',
-            Rank::AceLow => 'A',
-        }
-    }
-}
-
 impl fmt::Display for Rank {
     /// ```
     /// # use poker::*;
-    /// assert_eq!(Rank::try_from('A').unwrap().to_string(), "A");
+    /// assert_eq!(Rank::try_from("A").unwrap().to_string(), "A");
     /// ```
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", char::from(*self))
+        write!(f, "{}", match self {
+            Rank::Two => "2",
+            Rank::Three => "3",
+            Rank::Four => "4",
+            Rank::Five => "5",
+            Rank::Six => "6",
+            Rank::Seven => "7",
+            Rank::Eight => "8",
+            Rank::Nine => "9",
+            Rank::Ten => "10",
+            Rank::Jack => "J",
+            Rank::Queen => "Q",
+            Rank::King => "K",
+            Rank::Ace => "A",
+            Rank::AceLow => "A",
+        })
     }
 }
 
-impl TryFrom<char> for Rank {
+impl TryFrom<&str> for Rank {
     type Error = Undecodable;
 
     /// ```
     /// # use poker::*;
-    /// assert_eq!(Rank::try_from('2'), Ok(Rank::Two));
-    /// assert_eq!(Rank::try_from('?'), Err(Undecodable("'?': not a Rank".to_string())));
+    /// assert_eq!(Rank::try_from("2"), Ok(Rank::Two));
+    /// assert_eq!(Rank::try_from("10"), Ok(Rank::Ten));
+    /// assert_eq!(Rank::try_from("?"), Err(Undecodable("\"?\": not a Rank".to_string())));
     /// ```
-    fn try_from(s: char) -> Result<Self, Self::Error> {
+    fn try_from(s: &str) -> Result<Self, Self::Error> {
         match s {
-            '2' => Ok(Rank::Two),
-            '3' => Ok(Rank::Three),
-            '4' => Ok(Rank::Four),
-            '5' => Ok(Rank::Five),
-            '6' => Ok(Rank::Six),
-            '7' => Ok(Rank::Seven),
-            '8' => Ok(Rank::Eight),
-            '9' => Ok(Rank::Nine),
-            'J' => Ok(Rank::Jack),
-            'Q' => Ok(Rank::Queen),
-            'K' => Ok(Rank::King),
-            'A' => Ok(Rank::Ace),
+            "2" => Ok(Rank::Two),
+            "3" => Ok(Rank::Three),
+            "4" => Ok(Rank::Four),
+            "5" => Ok(Rank::Five),
+            "6" => Ok(Rank::Six),
+            "7" => Ok(Rank::Seven),
+            "8" => Ok(Rank::Eight),
+            "9" => Ok(Rank::Nine),
+            "10" => Ok(Rank::Ten),
+            "J" => Ok(Rank::Jack),
+            "Q" => Ok(Rank::Queen),
+            "K" => Ok(Rank::King),
+            "A" => Ok(Rank::Ace),
             _ => Err(Undecodable(format!("{:?}: not a Rank", s))),
         }
     }
@@ -161,13 +159,11 @@ impl TryFrom<&str> for Card {
     type Error = Undecodable;
 
     fn try_from(s: &str) -> Result<Self, Self::Error> {
-        let chrs = s.chars().collect::<Vec<_>>();
-        if chrs.len() != 2 {
-            return Err(Undecodable(format!("{:?}: expected to be two chars", s)));
-        };
+        let mut chrs = s.chars().collect::<Vec<_>>();
+        let st = chrs.pop().unwrap();
         Ok(Card {
-            rank: Rank::try_from(chrs[0])?,
-            suit: Suit::try_from(chrs[1])?,
+            rank: Rank::try_from(chrs.iter().collect::<String>().as_str())?,
+            suit: Suit::try_from(st)?,
         })
     }
 }
@@ -240,28 +236,25 @@ impl TryFrom<&str> for Hand {
 }
 
 /// ```
-/// # use poker::*;
-/// fn consecutive_(s: &str) -> bool {
+/// # use poker::{*, Rank, Rank::*};
+/// fn consecutive_(s: &str) -> Option<Rank> {
 ///   consecutive(&Hand::try_from(s).unwrap().cards)
 /// }
 ///
-/// assert!(consecutive_("2C 3C 4C 5C 6C"));
-/// assert!(consecutive_("6C 7C 8C 9C JC"));
-/// assert!(consecutive_("9C JC QC KC AC"));
-/// assert!(consecutive_("AC 2C 3C 4C 5C"));
+/// assert_eq!(consecutive_("2C 3C 4C 5C 6C"), Some(Six));
+/// assert_eq!(consecutive_("6C 7C 8C 9C 10C"), Some(Ten));
+/// assert_eq!(consecutive_("10C JC QC KC AC"), Some(Ace));
+/// assert_eq!(consecutive_("AC 2C 3C 4C 5C"), Some(Five));
+/// assert_eq!(consecutive_("AC 3C 5C 7C 9C"), None);
 /// ```
-pub fn consecutive(cards: &[Card]) -> bool {
-    if cards.len() < 2 {
-        return true;
-    }
-
+pub fn consecutive(cards: &[Card; 5]) -> Option<Rank> {
     let ranks = cards
         .iter()
         .map(|Card { rank, suit: _ }| *rank)
         .collect::<Vec<_>>();
 
     if HashSet::<_>::from_iter(ranks.iter()).len() != cards.len() {
-        return false;
+        return None;
     }
 
     let mut possibilities = vec![ranks];
@@ -277,15 +270,20 @@ pub fn consecutive(cards: &[Card]) -> bool {
         v.sort()
     }
 
-    possibilities.iter().any(|p| {
-        p.windows(2).all(|w| {
+    for p in possibilities{
+
+        if p.windows(2).all(|w| {
             if let [a, b] = w {
                 (*a as u8) + 1 == (*b as u8)
             } else {
                 false
             }
-        })
-    })
+        }) {
+            return Some(p[4]);
+        }
+    }
+
+    None
 }
 
 /// ```
@@ -394,7 +392,7 @@ impl From<Hand> for HandScore {
     ///   HandScore::from(Hand::try_from(s).unwrap())
     /// }
     ///
-    /// assert_eq!(score("AS 2S 3S 4S 5S"), StraightFlush{top_rank: Ace});
+    /// assert_eq!(score("AS 2S 3S 4S 5S"), StraightFlush{top_rank: Five});
     ///
     /// assert_eq!(score("AS 3S 5S 7S 9S"), Flush{ranks: vec![Three, Five, Seven, Nine, Ace]});
     ///
@@ -405,12 +403,14 @@ impl From<Hand> for HandScore {
         let mut cards = h.cards;
         cards.sort();
         let same_suit = same_suit(&cards);
-        let consecutive = consecutive(&cards);
+        let straight_high = consecutive(&cards);
         let tally = &tally_ranks(&cards)[..];
 
-        if consecutive && same_suit {
-            return HandScore::StraightFlush {
-                top_rank: cards[4].rank,
+        if let Some(top_rank) = straight_high {
+            if same_suit {
+                return HandScore::StraightFlush {
+                    top_rank,
+                };
             };
         };
 
@@ -433,10 +433,8 @@ impl From<Hand> for HandScore {
             return HandScore::Flush { ranks };
         };
 
-        if consecutive {
-            return HandScore::Straight {
-                top_rank: cards[4].rank,
-            };
+        if let Some(top_rank) = straight_high {
+            return HandScore::Straight {top_rank};
         };
 
         if let [(3, top_rank), (1, other_rank_1), (1, other_rank_2)] = tally {
