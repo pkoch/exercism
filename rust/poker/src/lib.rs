@@ -138,17 +138,8 @@ impl fmt::Display for Suit {
 
 /// ```
 /// # use poker::*;
-/// fn sorted(s: &str) -> String {
-///   let mut h = Hand::of(s);
-///   h.cards.sort();
-///   h.to_string()
-/// }
-///
-/// assert_eq!(sorted("AS 2S 3S 4S 5S"), "2S 3S 4S 5S AS");
-/// assert_eq!(sorted("AS AC 3S 4D AH"), "3S 4D AC AH AS");
-///
 /// fn is_sorted(s: &str) {
-///     assert_eq!(sorted(s), s)
+///     assert_eq!(Hand::of(s).to_string(), s)
 /// }
 /// is_sorted("2C 3C 4C 5C 6C");
 /// is_sorted("6C 7C 8C 9C JC");
@@ -196,7 +187,7 @@ impl fmt::Display for Card {
     }
 }
 
-#[derive(Copy, Clone, Debug, Hash, PartialEq, Eq)]
+#[derive(PartialOrd, Ord, Copy, Clone, Debug, Hash, PartialEq, Eq)]
 pub struct Hand {
     pub cards: [Card; 5],
 }
@@ -223,7 +214,7 @@ impl TryFrom<&str> for Hand {
     /// assert_eq!(Hand::try_from("AS AS 3S 4S 5S"), Err(Undecodable("\"AS AS 3S 4S 5S\": expected all cards to be different".to_string())));
     /// ```
     fn try_from(s: &str) -> Result<Self, Self::Error> {
-        let cards_v: Vec<Card> = s
+        let mut cards_v: Vec<Card> = s
             .split_ascii_whitespace()
             .map(Card::try_from)
             .collect::<Result<Vec<Card>, _>>()?;
@@ -242,6 +233,8 @@ impl TryFrom<&str> for Hand {
             )));
         };
 
+        cards_v.sort();
+
         let cards = cards_v
             .try_into()
             .map_err(|v| Undecodable(format!("Couldn't turn {:?} into a [Card; 5]", v)))?;
@@ -253,8 +246,8 @@ impl TryFrom<&str> for Hand {
 impl fmt::Display for Hand {
     /// ```
     /// # use poker::*;
-    /// let source = "AS 2S 3S 4S 5S";
-    /// assert_eq!(Hand::of(source).to_string(), source);
+    /// // Putting cards in Hand sorts them.
+    /// assert_eq!(Hand::of("AS 2S 3S 4S 5S").to_string(), "2S 3S 4S 5S AS");
     /// ```
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
@@ -281,29 +274,29 @@ impl fmt::Display for Hand {
 /// assert_eq!(consecutive_("AC 2C 3C 4C 5C"), Some(Five));
 /// assert_eq!(consecutive_("AC 3C 5C 7C 9C"), None);
 /// ```
-pub fn consecutive(cards: &[Card; 5]) -> Option<Rank> {
-    let ranks: Vec<Rank> = cards
+pub fn consecutive(cards: &[Card]) -> Option<Rank> {
+    let ranks: Vec<&Rank> = cards
         .iter()
-        .map(|Card { rank, suit: _ }| *rank)
+        .map(|Card { rank, suit: _ }| rank)
         .collect::<Vec<_>>();
 
     if HashSet::<_>::from_iter(ranks.iter()).len() != cards.len() {
         return None;
     }
 
-    let mut possibilities: Vec<Vec<Rank>> = vec![ranks];
+    let mut possibilities: Vec<Vec<&Rank>> = vec![ranks];
     let ranks_ = &possibilities[0];
-    if ranks_.contains(&Rank::Ace) {
+    if ranks_.contains(&&Rank::Ace) {
         let mut alt = ranks_.clone();
-        alt.retain(|e| *e != Rank::Ace);
-        alt.push(Rank::AceLow);
+        alt.retain(|e| **e != Rank::Ace);
+        alt.push(&Rank::AceLow);
         possibilities.push(alt);
     }
 
     for v in possibilities.iter_mut() {
         v.sort();
-        if v.windows(2).all(|w| (w[0] as u8) + 1 == (w[1] as u8)) {
-            return Some(v[4]);
+        if v.windows(2).all(|w| (*w[0] as u8) + 1 == (*w[1] as u8)) {
+            return Some(*v[4]);
         }
     }
 
@@ -357,11 +350,11 @@ pub fn tally_ranks(cards: &[Card]) -> Vec<(usize, Rank)> {
 #[derive(Clone, Debug, Hash, PartialEq, Eq, PartialOrd, Ord)]
 pub enum HandScore {
     HighCard {
-        ranks: Vec<Rank>,
+        ranks: [Rank; 5],
     },
     OnePair {
         top_rank: Rank,
-        other_ranks: Vec<Rank>,
+        other_ranks: [Rank; 3],
     },
     TwoPair {
         top_rank: Rank,
@@ -370,13 +363,13 @@ pub enum HandScore {
     },
     ThreeOfAKind {
         top_rank: Rank,
-        other_ranks: Vec<Rank>,
+        other_ranks: [Rank; 2],
     },
     Straight {
         top_rank: Rank,
     },
     Flush {
-        ranks: Vec<Rank>,
+        ranks: [Rank; 5],
     },
     FullHouse {
         top_rank: Rank,
@@ -400,20 +393,24 @@ impl From<Hand> for HandScore {
     ///
     /// assert_eq!(score("AS 2S 3S 4S 5S"), StraightFlush{top_rank: Five});
     ///
-    /// assert_eq!(score("AS 3S 5S 7S 9S"), Flush{ranks: vec![Three, Five, Seven, Nine, Ace]});
+    /// assert_eq!(score("AS 3S 5S 7S 9S"), Flush{ranks: [Three, Five, Seven, Nine, Ace]});
     ///
     /// assert_eq!(score("AS AC AD AH 9H"), FourOfAKind{top_rank: Ace, bottom_rank: Nine});
     /// assert_eq!(score("AH 9C 9D 9H 9S"), FourOfAKind{top_rank: Nine, bottom_rank: Ace});
     /// ```
     fn from(h: Hand) -> Self {
-        let mut cards = h.cards;
-        cards.sort();
-        let ranks = cards.iter().map(|c| c.rank).collect::<Vec<_>>();
+        let ranks: [Rank; 5] = {
+            let mut r = [Rank::AceLow; 5];
+            for (i, c) in h.cards.iter().enumerate() {
+                r[i] = c.rank;
+            }
+            r
+        };
 
         match (
-            consecutive(&cards),
-            same_suit(&cards),
-            &tally_ranks(&cards)[..],
+            consecutive(&h.cards),
+            same_suit(&h.cards),
+            &tally_ranks(&h.cards)[..],
         ) {
             (Some(top_rank), true, _) => HandScore::StraightFlush { top_rank },
             (_, _, [(4, top_rank), (1, bottom_rank)]) => HandScore::FourOfAKind {
@@ -429,7 +426,7 @@ impl From<Hand> for HandScore {
             (_, _, [(3, top_rank), (1, other_rank_1), (1, other_rank_2)]) => {
                 HandScore::ThreeOfAKind {
                     top_rank: *top_rank,
-                    other_ranks: vec![*other_rank_1, *other_rank_2],
+                    other_ranks: [*other_rank_1, *other_rank_2],
                 }
             }
             (_, _, [(2, top_rank), (2, second_rank), (1, other_rank)]) => HandScore::TwoPair {
@@ -440,7 +437,7 @@ impl From<Hand> for HandScore {
             (_, _, [(2, top_rank), (1, other_rank_1), (1, other_rank_2), (1, other_rank_3)]) => {
                 HandScore::OnePair {
                     top_rank: *top_rank,
-                    other_ranks: vec![*other_rank_1, *other_rank_2, *other_rank_3],
+                    other_ranks: [*other_rank_1, *other_rank_2, *other_rank_3],
                 }
             }
             (_, _, _) => HandScore::HighCard { ranks },
@@ -459,9 +456,11 @@ pub fn winning_hands<'a>(hands: &[&'a str]) -> Vec<&'a str> {
         return vec![];
     }
 
-    let mut hs: Vec<(HandScore, &str)> = hands.iter().map(|h| (HandScore::from(*h), *h)).collect();
+    let mut hs: Vec<(HandScore, &str)> = hands.iter().map(|s| {
+        (HandScore::from(Hand::of(*s)), *s)
+    }).collect();
     hs.sort();
     let highest_score = hs.last().unwrap().0.clone();
-    hs.retain(|(s, _)| *s == highest_score);
-    hs.iter().map(|(_h, s)| *s).collect()
+    hs.retain(|(hs, _s)| *hs == highest_score);
+    hs.iter().map(|(_hs, s)| *s).collect()
 }
