@@ -96,15 +96,15 @@ pub enum Suit {
     Spades = 'S' as u8,
 }
 
-impl TryFrom<char> for Suit {
+impl TryFrom<&char> for Suit {
     type Error = Undecodable;
 
     /// ```
     /// # use poker::*;
-    /// assert_eq!(Suit::try_from('D'), Ok(Suit::Diamonds));
-    /// assert_eq!(Suit::try_from('?'), Err(Undecodable("'?': not a Suit".to_string())));
+    /// assert_eq!(Suit::try_from(&'D'), Ok(Suit::Diamonds));
+    /// assert_eq!(Suit::try_from(&'?'), Err(Undecodable("'?': not a Suit".to_string())));
     /// ```
-    fn try_from(s: char) -> Result<Self, Self::Error> {
+    fn try_from(s: &char) -> Result<Self, Self::Error> {
         match s {
             'D' => Ok(Suit::Diamonds),
             'H' => Ok(Suit::Hearts),
@@ -115,13 +115,24 @@ impl TryFrom<char> for Suit {
     }
 }
 
+impl From<&Suit> for char {
+    fn from(s: &Suit) -> Self {
+        match s {
+            Suit::Diamonds => 'D',
+            Suit::Hearts => 'H',
+            Suit::Clubs => 'C',
+            Suit::Spades => 'S',
+        }
+    }
+}
+
 impl fmt::Display for Suit {
     /// ```
     /// # use poker::*;
-    /// assert_eq!(Suit::try_from('S').unwrap().to_string(), "S");
+    /// assert_eq!(Suit::try_from(&'S').unwrap().to_string(), "S");
     /// ```
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", char::from(*self as u8 as char).to_string())
+        write!(f, "{}", char::from(self).to_string())
     }
 }
 
@@ -170,7 +181,7 @@ impl TryFrom<&str> for Card {
 
         Ok(Card {
             rank: Rank::try_from(chrs.iter().collect::<String>().as_str())?,
-            suit: Suit::try_from(st)?,
+            suit: Suit::try_from(&st)?,
         })
     }
 }
