@@ -128,7 +128,7 @@ impl fmt::Display for Suit {
 /// ```
 /// # use poker::*;
 /// fn sorted(s: &str) -> String {
-///   let mut h = Hand::try_from(s).unwrap();
+///   let mut h = Hand::of(s);
 ///   h.cards.sort();
 ///   h.to_string()
 /// }
@@ -190,6 +190,12 @@ pub struct Hand {
     pub cards: [Card; 5],
 }
 
+impl Hand {
+    pub fn of(s: &str) -> Self {
+        Hand::try_from(s).unwrap_or_else(|v| panic!("{:?}", v))
+    }
+}
+
 impl TryFrom<&str> for Hand {
     type Error = Undecodable;
 
@@ -237,7 +243,7 @@ impl fmt::Display for Hand {
     /// ```
     /// # use poker::*;
     /// let source = "AS 2S 3S 4S 5S";
-    /// assert_eq!(Hand::try_from(source).unwrap().to_string(), source);
+    /// assert_eq!(Hand::of(source).to_string(), source);
     /// ```
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(
@@ -255,7 +261,7 @@ impl fmt::Display for Hand {
 /// ```
 /// # use poker::{*, Rank, Rank::*};
 /// fn consecutive_(s: &str) -> Option<Rank> {
-///   consecutive(&Hand::try_from(s).unwrap().cards)
+///   consecutive(&Hand::of(s).cards)
 /// }
 ///
 /// assert_eq!(consecutive_("2C 3C 4C 5C 6C"), Some(Six));
@@ -296,7 +302,7 @@ pub fn consecutive(cards: &[Card; 5]) -> Option<Rank> {
 /// ```
 /// # use poker::*;
 /// fn same_suit_(s: &str) -> bool {
-///   same_suit(&Hand::try_from(s).unwrap().cards)
+///   same_suit(&Hand::of(s).cards)
 /// }
 ///
 /// assert!(same_suit_("2C 3C 4C 5C 6C"));
@@ -314,7 +320,7 @@ pub fn same_suit(cards: &[Card]) -> bool {
 /// ```
 /// # use poker::{tally_ranks, Undecodable, Card, Hand, Suit::*, Rank::*};
 /// assert_eq!(
-///     tally_ranks(&Hand::try_from("KC KH QC QH JC").unwrap().cards),
+///     tally_ranks(&Hand::of("KC KH QC QH JC").cards),
 ///     vec![
 ///         (2, King),
 ///         (2, Queen),
@@ -378,7 +384,7 @@ impl From<Hand> for HandScore {
     /// ```
     /// # use poker::{Hand, HandScore, HandScore::*, Rank::*};
     /// fn score(s: &str) -> HandScore {
-    ///   HandScore::from(Hand::try_from(s).unwrap())
+    ///   HandScore::from(Hand::of(s))
     /// }
     ///
     /// assert_eq!(score("AS 2S 3S 4S 5S"), StraightFlush{top_rank: Five});
@@ -433,7 +439,7 @@ impl From<Hand> for HandScore {
 
 impl From<&str> for HandScore {
     fn from(s: &str) -> Self {
-        HandScore::from(Hand::try_from(s).unwrap_or_else(|v| panic!("{:?}", v)))
+        HandScore::from(Hand::of(s))
     }
 }
 
