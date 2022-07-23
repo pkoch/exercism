@@ -33,8 +33,7 @@ impl Allergies {
         Allergies{
             allergens: ALL_ALLERGIES
                 .iter()
-                .filter(|a| (**a as u32) & score != 0)
-                .map(|a| *a)
+                .filter_map(|a| if (*a as u32) & score != 0 {Some(*a)} else {None})
                 .collect()
         }
     }
