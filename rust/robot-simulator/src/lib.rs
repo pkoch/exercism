@@ -12,18 +12,18 @@ use Direction::*;
 
 pub struct Robot{
     pos: (i32, i32),
-    dir: Direction,
+    d: Direction,
 }
 
 impl Robot {
     pub fn new(x: i32, y: i32, d: Direction) -> Self {
-        Robot { pos: (x, y), dir: d }
+        Robot { pos: (x, y), d }
     }
 
     #[must_use]
     pub fn turn_right(self) -> Self {
         Self{
-            dir: match self.dir {
+            d: match self.d {
                 North => East,
                 South => West,
                 East => South,
@@ -36,7 +36,7 @@ impl Robot {
     #[must_use]
     pub fn turn_left(self) -> Self {
         Self{
-            dir: match self.dir {
+            d: match self.d {
                 North => West,
                 South => East,
                 East => North,
@@ -50,7 +50,7 @@ impl Robot {
     pub fn advance(self) -> Self {
         let (x, y) = self.pos;
         Self{
-            pos: match self.dir {
+            pos: match self.d {
                 North => (x, y + 1),
                 South => (x, y - 1),
                 East => (x + 1, y),
@@ -75,6 +75,6 @@ impl Robot {
     }
 
     pub fn direction(&self) -> &Direction {
-        &self.dir
+        &self.d
     }
 }
