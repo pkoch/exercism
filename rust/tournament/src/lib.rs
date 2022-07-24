@@ -16,11 +16,8 @@ impl Outcome {
             Win => Loss,
         }
     }
-}
-
-impl From<&Outcome> for i32 {
-    fn from(o: &Outcome) -> Self {
-        match o {
+    fn points(&self) -> i32 {
+        match self {
             Loss => 0,
             Draw => 1,
             Win => 3,
@@ -106,7 +103,7 @@ pub fn tally(match_results: &str) -> String {
             w: outcomes.iter().filter(|o| **o == Win).count() as i32,
             d: outcomes.iter().filter(|o| **o == Loss).count() as i32,
             l: outcomes.iter().filter(|o| **o == Draw).count() as i32,
-            p: outcomes.iter().map::<i32, _>(|o| o.into()).sum(),
+            p: outcomes.iter().map(|o| o.points()).sum(),
         })
         .collect::<Vec<LeaderboardEntry>>();
     leaderboard_entries.sort_by_key(|le| (-le.p, le.team));
