@@ -85,8 +85,8 @@ const HEADER: &str = "Team                           | MP |  W |  D |  L |  P";
 
 pub fn tally(match_results: &str) -> String {
     let matches: Vec<Match> = match_results
-        .split("\n")
-        .filter(|s| *s != "")
+        .split('\n')
+        .filter(|s| !(*s).is_empty())
         .map(|l| Match::from_str(l).unwrap())
         .collect();
 
@@ -109,7 +109,7 @@ pub fn tally(match_results: &str) -> String {
             p: outcomes.iter().map::<i32, _>(|o| o.into()).sum(),
         })
         .collect::<Vec<LeaderboardEntry>>();
-    leaderboard_entries.sort_by_key(|le| (le.p * -1, le.team));
+    leaderboard_entries.sort_by_key(|le| (-le.p, le.team));
 
     vec![HEADER.to_string()]
         .into_iter()
