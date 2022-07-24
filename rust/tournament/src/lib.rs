@@ -86,7 +86,7 @@ const HEADER: &str = "Team                           | MP |  W |  D |  L |  P";
 pub fn tally(match_results: &str) -> String {
     let matches: Vec<Match> = match_results
         .split('\n')
-        .filter(|s| !(*s).is_empty())
+        .filter(|s| !s.is_empty())
         .map(|l| Match::from_str(l).unwrap())
         .collect();
 
