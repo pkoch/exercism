@@ -116,7 +116,7 @@ pub fn char_at(lines: &[&str], x: usize, y: usize) -> Option<char> {
 }
 
 pub fn count(lines: &[&str]) -> u32 {
-    let mut crosses = lines
+    let crosses = lines
         .iter()
         .enumerate()
         .flat_map(|(y, l)| {
@@ -129,7 +129,6 @@ pub fn count(lines: &[&str]) -> u32 {
             })
         })
         .collect::<Vec<Coordinate>>();
-    crosses.sort();
 
     let mut detected_rectangles = HashSet::<Rectangle>::new();
     for lt in &crosses[..] {
