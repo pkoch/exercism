@@ -94,22 +94,24 @@ impl Rectangle {
     /// ```
     pub fn exists_in_grid(&self, lines: &[&str]) -> bool {
         Some('+') == char_at(lines, self.r(), self.t())
-        && Some('+') == char_at(lines, self.l(), self.b())
-        &&[
+            && Some('+') == char_at(lines, self.l(), self.b())
+            && [
                 ((self.l(), self.r()), self.t()),
                 ((self.l(), self.r()), self.b()),
             ]
             .iter()
             .all(|((x_start, x_end), y)| {
-                (*x_start..=*x_end).all(|x| ['-', '+'].contains(&char_at(lines, x, *y).unwrap_or(' ')))
+                (*x_start..=*x_end)
+                    .all(|x| ['-', '+'].contains(&char_at(lines, x, *y).unwrap_or(' ')))
             })
-        && [
+            && [
                 (self.l(), (self.t(), self.b())),
                 (self.r(), (self.t(), self.b())),
             ]
             .iter()
             .all(|(x, (y_start, y_end))| {
-                (*y_start..=*y_end).all(|y| ['|', '+'].contains(&char_at(lines, *x, y).unwrap_or(' ')))
+                (*y_start..=*y_end)
+                    .all(|y| ['|', '+'].contains(&char_at(lines, *x, y).unwrap_or(' ')))
             })
     }
 }
@@ -140,11 +142,11 @@ pub fn count(lines: &[&str]) -> u32 {
     let mut detected_rectangles = HashSet::<Rectangle>::new();
     for lt in &crosses[..] {
         for rb in &crosses[..] {
-            if !(rb.x > lt.x && rb.y > lt.y)  {
+            if !(rb.x > lt.x && rb.y > lt.y) {
                 continue;
             }
 
-            let candidate = Rectangle{lt: *lt, rb: *rb};
+            let candidate = Rectangle { lt: *lt, rb: *rb };
             if candidate.exists_in_grid(lines) {
                 detected_rectangles.insert(candidate);
             }
