@@ -125,17 +125,7 @@ impl Rectangle {
 }
 
 pub fn char_at(lines: &[&str], x: usize, y: usize) -> Option<char> {
-    lines
-        .get(y)
-        .and_then(|l| l.chars().nth(x))
-}
-
-fn when_then<V, F: Fn() -> V>(when: bool, then: F) -> Option<V> {
-    if when {
-        Some(then())
-    } else {
-        None
-    }
+    lines.get(y).and_then(|l| l.chars().nth(x))
 }
 
 pub fn count(lines: &[&str]) -> u32 {
@@ -145,19 +135,16 @@ pub fn count(lines: &[&str]) -> u32 {
         .flat_map(|(y, l)| {
             l.chars()
                 .enumerate()
-                .filter_map(move |(x, c)| when_then(c == '+', || Coordinate { x, y }))
+                .filter(|(_x, c)| *c == '+')
+                .map(move |(x, _c)| Coordinate { x, y })
         })
         .collect::<Vec<Coordinate>>();
 
     crosses
         .iter()
         .flat_map(|lt| crosses.iter().map(move |rb| (lt, rb)))
-        .filter_map(|(lt, rb)| {
-            when_then(rb.x > lt.x && rb.y > lt.y, || Rectangle {
-                lt: *lt,
-                rb: *rb,
-            })
-        })
+        .filter(|(lt, rb)| rb.x > lt.x && rb.y > lt.y)
+        .map(|(lt, rb)| Rectangle { lt: *lt, rb: *rb })
         .filter(|r| r.exists_in_grid(lines))
         .count() as u32
 }
