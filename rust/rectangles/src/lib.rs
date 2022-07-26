@@ -1,5 +1,3 @@
-use std::collections::HashSet;
-
 #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Clone, Copy)]
 pub struct Coordinate {
     pub x: usize,
@@ -139,19 +137,16 @@ pub fn count(lines: &[&str]) -> u32 {
         })
         .collect::<Vec<Coordinate>>();
 
-    let mut detected_rectangles = HashSet::<Rectangle>::new();
-    for lt in &crosses[..] {
-        for rb in &crosses[..] {
-            if !(rb.x > lt.x && rb.y > lt.y) {
-                continue;
+    crosses
+        .iter()
+        .flat_map(|lt| crosses.iter().map(move |rb| (lt, rb)))
+        .filter_map(|(lt, rb)| {
+            if rb.x > lt.x && rb.y > lt.y {
+                Some(Rectangle { lt: *lt, rb: *rb })
+            } else {
+                None
             }
-
-            let candidate = Rectangle { lt: *lt, rb: *rb };
-            if candidate.exists_in_grid(lines) {
-                detected_rectangles.insert(candidate);
-            }
-        }
-    }
-
-    detected_rectangles.len() as u32
+        })
+        .filter(|r| r.exists_in_grid(lines))
+        .count() as u32
 }
