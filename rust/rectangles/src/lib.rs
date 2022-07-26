@@ -126,10 +126,8 @@ impl Rectangle {
 
 pub fn char_at(lines: &[&str], x: usize, y: usize) -> Option<char> {
     lines
-        .iter()
-        .nth(y)
-        .map(|l| l.chars().nth(x).map(|c| c))
-        .flatten()
+        .get(y)
+        .and_then(|l| l.chars().nth(x))
 }
 
 fn when_then<V, F: Fn() -> V>(when: bool, then: F) -> Option<V> {
