@@ -18,23 +18,23 @@ impl Rectangle {
     /// ```
     /// # use rectangles::*;
     /// assert!(
-    ///     Rectangle::from([
-    ///         Coordinate{x: 0, y: 0},
-    ///         Coordinate{x: 1, y: 0},
-    ///         Coordinate{x: 0, y: 1},
-    ///         Coordinate{x: 1, y: 1},
-    ///     ]).is_connected(&[
+    ///     Rectangle{
+    ///         lt: Coordinate{x: 0, y: 0},
+    ///         rt: Coordinate{x: 1, y: 0},
+    ///         lb: Coordinate{x: 0, y: 1},
+    ///         rb: Coordinate{x: 1, y: 1},
+    ///     }.is_connected(&[
     ///         "++",
     ///         "++",
     ///     ]),
     /// );
     /// assert!(
-    ///     Rectangle::from([
-    ///         Coordinate{x: 0, y: 0},
-    ///         Coordinate{x: 3, y: 0},
-    ///         Coordinate{x: 0, y: 1},
-    ///         Coordinate{x: 3, y: 1},
-    ///     ]).is_connected(&[
+    ///     Rectangle{
+    ///         lt: Coordinate{x: 0, y: 0},
+    ///         rt: Coordinate{x: 3, y: 0},
+    ///         lb: Coordinate{x: 0, y: 1},
+    ///         rb: Coordinate{x: 3, y: 1},
+    ///     }.is_connected(&[
     ///         "+--+",
     ///         "+--+",
     ///     ]),
@@ -77,12 +77,12 @@ impl Rectangle {
     ///     ]),
     /// ].iter().enumerate() {
     ///   assert_eq!(
-    ///       Rectangle::from([
-    ///           Coordinate{x: 0, y: 0},
-    ///           Coordinate{x: 2, y: 0},
-    ///           Coordinate{x: 0, y: 2},
-    ///           Coordinate{x: 2, y: 2},
-    ///       ]).is_connected(&grid[..]),
+    ///       Rectangle{
+    ///           lt: Coordinate{x: 0, y: 0},
+    ///           rt: Coordinate{x: 2, y: 0},
+    ///           lb: Coordinate{x: 0, y: 2},
+    ///           rb: Coordinate{x: 2, y: 2},
+    ///       }.is_connected(&grid[..]),
     ///       *result,
     ///       "{:?} failed", n,
     ///   );
@@ -104,50 +104,6 @@ impl Rectangle {
         .all(|(x, (y_start, y_end))| {
             (*y_start..=*y_end).all(|y| ['|', '+'].contains(&char_at(lines, *x, y).unwrap_or(' ')))
         })
-    }
-}
-
-impl From<[Coordinate; 4]> for Rectangle {
-    /// ```
-    /// # use rectangles::*;
-    /// assert_eq!(
-    ///     Rectangle::from([
-    ///         Coordinate{x: 0, y: 0},
-    ///         Coordinate{x: 1, y: 0},
-    ///         Coordinate{x: 0, y: 1},
-    ///         Coordinate{x: 1, y: 1},
-    ///     ]),
-    ///     Rectangle{
-    ///         lt: Coordinate{x: 0, y: 0},
-    ///         rt: Coordinate{x: 1, y: 0},
-    ///         lb: Coordinate{x: 0, y: 1},
-    ///         rb: Coordinate{x: 1, y: 1},
-    ///     },
-    /// );
-    /// assert_eq!(
-    ///     Rectangle::from([
-    ///         Coordinate{x: 0, y: 0},
-    ///         Coordinate{x: 0, y: 2},
-    ///         Coordinate{x: 2, y: 0},
-    ///         Coordinate{x: 2, y: 2},
-    ///     ]),
-    ///     Rectangle{
-    ///         lt: Coordinate{x: 0, y: 0},
-    ///         rt: Coordinate{x: 2, y: 0},
-    ///         lb: Coordinate{x: 0, y: 2},
-    ///         rb: Coordinate{x: 2, y: 2},
-    ///     },
-    /// );
-    /// ```
-    fn from(coords: [Coordinate; 4]) -> Self {
-        let mut coords_: Vec<Coordinate> = (&coords[..]).into();
-        coords_.sort();
-        Rectangle {
-            lt: coords_[0],
-            rt: coords_[2],
-            lb: coords_[1],
-            rb: coords_[3],
-        }
     }
 }
 
@@ -189,7 +145,7 @@ pub fn count(lines: &[&str]) -> u32 {
                 continue;
             }
 
-            let candidate = Rectangle::from([*lt, *rt, *lb, *rb]);
+            let candidate = Rectangle{lt: *lt, rt: *rt, lb: *lb, rb: *rb};
             if candidate.is_connected(lines) {
                 println!("{:?}", candidate);
                 detected_rectangles.insert(candidate);
