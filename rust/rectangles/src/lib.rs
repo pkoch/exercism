@@ -133,7 +133,7 @@ pub fn count(lines: &[&str]) -> u32 {
     let mut detected_rectangles = HashSet::<Rectangle>::new();
     for lt in &crosses[..] {
         for rb in &crosses[..] {
-            if lt.x == rb.x || lt.y == rb.y {
+            if !(rb.x > lt.x && rb.y > lt.y)  {
                 continue;
             }
 
