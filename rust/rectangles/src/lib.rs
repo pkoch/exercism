@@ -146,7 +146,6 @@ pub fn count(lines: &[&str]) -> u32 {
 
             let candidate = Rectangle{lt: *lt, rb: *rb};
             if candidate.exists_in_grid(lines) {
-                println!("{:?}", candidate);
                 detected_rectangles.insert(candidate);
             }
         }
