@@ -29,19 +29,19 @@ impl Rectangle {
     ///     Rectangle{
     ///         lt: Coordinate{x: 0, y: 0},
     ///         rb: Coordinate{x: 1, y: 1},
-    ///     }.exists_in_grid(&[
+    ///     }.exists_in_grid(Grid(&[
     ///         "++",
     ///         "++",
-    ///     ]),
+    ///     ])),
     /// );
     /// assert!(
     ///     Rectangle{
     ///         lt: Coordinate{x: 0, y: 0},
     ///         rb: Coordinate{x: 3, y: 1},
-    ///     }.exists_in_grid(&[
+    ///     }.exists_in_grid(Grid(&[
     ///         "+--+",
     ///         "+--+",
-    ///     ]),
+    ///     ])),
     /// );
     /// for (n, (result, grid)) in [
     ///     (true, &[
@@ -94,15 +94,15 @@ impl Rectangle {
     ///       Rectangle{
     ///           lt: Coordinate{x: 0, y: 0},
     ///           rb: Coordinate{x: 2, y: 2},
-    ///       }.exists_in_grid(&grid[..]),
+    ///       }.exists_in_grid(Grid(&grid[..])),
     ///       *result,
     ///       "{:?} failed", n,
     ///   );
     /// }
     /// ```
-    pub fn exists_in_grid(&self, lines: &[&str]) -> bool {
-        Some('+') == char_at(lines, self.r(), self.t())
-            && Some('+') == char_at(lines, self.l(), self.b())
+    pub fn exists_in_grid(&self, grid: Grid) -> bool {
+        Some('+') == grid.char_at(self.r(), self.t())
+            && Some('+') == grid.char_at(self.l(), self.b())
             && [
                 ((self.l(), self.r()), self.t()),
                 ((self.l(), self.r()), self.b()),
@@ -110,7 +110,7 @@ impl Rectangle {
             .iter()
             .all(|((x_start, x_end), y)| {
                 (*x_start..=*x_end)
-                    .all(|x| ['-', '+'].contains(&char_at(lines, x, *y).unwrap_or(' ')))
+                    .all(|x| ['-', '+'].contains(&grid.char_at(x, *y).unwrap_or(' ')))
             })
             && [
                 (self.l(), (self.t(), self.b())),
@@ -119,32 +119,45 @@ impl Rectangle {
             .iter()
             .all(|(x, (y_start, y_end))| {
                 (*y_start..=*y_end)
-                    .all(|y| ['|', '+'].contains(&char_at(lines, *x, y).unwrap_or(' ')))
+                    .all(|y| ['|', '+'].contains(&grid.char_at(*x, y).unwrap_or(' ')))
             })
     }
 }
 
-pub fn char_at(lines: &[&str], x: usize, y: usize) -> Option<char> {
-    lines.get(y).and_then(|l| l.chars().nth(x))
+#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Clone, Copy)]
+pub struct Grid<'a, 'b>(pub &'a [&'b str]);
+
+impl<'a, 'b> Grid<'a, 'b> {
+    pub fn char_at(&self, x: usize, y: usize) -> Option<char> {
+        self.0.get(y).and_then(|l| l.chars().nth(x))
+    }
+
+    pub fn iter(&self) -> impl Iterator<Item = (Coordinate, char)> + 'a {
+        self.0
+            .iter()
+            .enumerate()
+            .flat_map(|(y, l)| {
+                l.chars()
+                    .enumerate()
+                    .map(move |(x, c)| (Coordinate { x, y }, c))
+            })
+    }
 }
 
 pub fn count(lines: &[&str]) -> u32 {
-    let crosses = lines
+    let grid = Grid(lines);
+
+    let crosses: Vec<Coordinate> = grid
         .iter()
-        .enumerate()
-        .flat_map(|(y, l)| {
-            l.chars()
-                .enumerate()
-                .filter(|(_x, c)| *c == '+')
-                .map(move |(x, _c)| Coordinate { x, y })
-        })
-        .collect::<Vec<Coordinate>>();
+        .filter(|(_coord, char)| *char == '+')
+        .map(|(coord, _char)| coord)
+        .collect();
 
     crosses
         .iter()
         .flat_map(|lt| crosses.iter().map(move |rb| (lt, rb)))
         .filter(|(lt, rb)| rb.x > lt.x && rb.y > lt.y)
         .map(|(lt, rb)| Rectangle { lt: *lt, rb: *rb })
-        .filter(|r| r.exists_in_grid(lines))
+        .filter(|r| r.exists_in_grid(grid))
         .count() as u32
 }
