@@ -122,18 +122,22 @@ pub fn char_at(lines: &[&str], x: usize, y: usize) -> Option<char> {
         .flatten()
 }
 
+fn when_then<V, F: Fn() -> V>(when: bool, then: F) -> Option<V> {
+    if when {
+        Some(then())
+    } else {
+        None
+    }
+}
+
 pub fn count(lines: &[&str]) -> u32 {
     let crosses = lines
         .iter()
         .enumerate()
         .flat_map(|(y, l)| {
-            l.chars().enumerate().filter_map(move |(x, c)| {
-                if c == '+' {
-                    Some(Coordinate { x, y })
-                } else {
-                    None
-                }
-            })
+            l.chars()
+                .enumerate()
+                .filter_map(move |(x, c)| when_then(c == '+', || Coordinate { x, y }))
         })
         .collect::<Vec<Coordinate>>();
 
@@ -141,11 +145,10 @@ pub fn count(lines: &[&str]) -> u32 {
         .iter()
         .flat_map(|lt| crosses.iter().map(move |rb| (lt, rb)))
         .filter_map(|(lt, rb)| {
-            if rb.x > lt.x && rb.y > lt.y {
-                Some(Rectangle { lt: *lt, rb: *rb })
-            } else {
-                None
-            }
+            when_then(rb.x > lt.x && rb.y > lt.y, || Rectangle {
+                lt: *lt,
+                rb: *rb,
+            })
         })
         .filter(|r| r.exists_in_grid(lines))
         .count() as u32
