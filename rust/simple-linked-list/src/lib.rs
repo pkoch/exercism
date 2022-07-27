@@ -27,10 +27,7 @@ impl<T> SimpleLinkedList<T> {
     }
 
     pub fn is_empty(&self) -> bool {
-        match self.head {
-            None => true,
-            _ => false,
-        }
+        matches!(self.head, None)
     }
 
     pub fn len(&self) -> usize {
@@ -67,6 +64,12 @@ impl<T> SimpleLinkedList<T> {
             new.push(old.pop().unwrap())
         }
         new
+    }
+}
+
+impl<T> Default for SimpleLinkedList<T> {
+    fn default() -> Self {
+        Self::new()
     }
 }
 
