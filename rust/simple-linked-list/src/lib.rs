@@ -41,12 +41,12 @@ impl<T> SimpleLinkedList<T> {
     }
 
     pub fn push(&mut self, element: T) {
-        let old_head = mem::replace(&mut self.head, None);
+        let old_head = mem::take(&mut self.head);
         self.head = Some(Box::new(Node{element, next: old_head}));
     }
 
     pub fn pop(&mut self) -> Option<T> {
-        match mem::replace(&mut self.head, None) {
+        match mem::take(&mut self.head) {
             None => None,
             Some(old_head_node) => {
                 self.head = old_head_node.next;
