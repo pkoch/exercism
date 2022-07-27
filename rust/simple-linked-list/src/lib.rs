@@ -1,7 +1,5 @@
 use std::{iter::FromIterator, mem};
 
-
-#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Clone)]
 struct Node<T> {
     element: T,
     next: Option<Box<Node<T>>>,
@@ -16,7 +14,6 @@ impl<T> Node<T> {
     }
 }
 
-#[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Clone)]
 pub struct SimpleLinkedList<T> {
     head: Option<Box<Node<T>>>
 }
