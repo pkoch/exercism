@@ -2,51 +2,51 @@ use std::{iter::FromIterator, mem};
 
 struct Node<T> {
     element: T,
-    next: Option<Box<Node<T>>>,
+    prev: Option<Box<Node<T>>>,
 }
 
 pub struct SimpleLinkedList<T> {
-    head: Option<Box<Node<T>>>,
+    tail: Option<Box<Node<T>>>,
 }
 
 impl<T> SimpleLinkedList<T> {
     pub fn new() -> Self {
-        Self { head: None }
+        Self { tail: None }
     }
 
     pub fn is_empty(&self) -> bool {
-        matches!(self.head, None)
+        matches!(self.tail, None)
     }
 
     pub fn len(&self) -> usize {
         let mut res = 0;
-        let mut curr_node = &self.head;
-        while let Some(next_node) = curr_node {
+        let mut curr_node = &self.tail;
+        while let Some(prev_node) = curr_node {
             res += 1;
-            curr_node = &next_node.next;
+            curr_node = &prev_node.prev;
         }
         res
     }
 
     pub fn push(&mut self, element: T) {
-        self.head = Some(Box::new(Node {
+        self.tail = Some(Box::new(Node {
             element,
-            next: mem::take(&mut self.head),
+            prev: mem::take(&mut self.tail),
         }));
     }
 
     pub fn pop(&mut self) -> Option<T> {
-        match mem::take(&mut self.head) {
+        match mem::take(&mut self.tail) {
             None => None,
-            Some(old_head_node) => {
-                self.head = old_head_node.next;
-                Some(old_head_node.element)
+            Some(old_tail_node) => {
+                self.tail = old_tail_node.prev;
+                Some(old_tail_node.element)
             }
         }
     }
 
     pub fn peek(&self) -> Option<&T> {
-        self.head.as_deref().map(|n| &n.element)
+        self.tail.as_deref().map(|n| &n.element)
     }
 
     #[must_use]
@@ -82,7 +82,7 @@ impl<T> IntoIterator for SimpleLinkedList<T> {
 
     fn into_iter(self) -> Self::IntoIter {
         let v = self.rev();
-        IntoIter{node: v.head}
+        IntoIter{node: v.tail}
     }
 }
 
@@ -100,7 +100,7 @@ impl<T> Iterator for IntoIter<T> {
         }
         let old_box = old_node.unwrap();
         let res = Some(old_box.element);
-        self.node = old_box.next;
+        self.node = old_box.prev;
         res
     }
 }
