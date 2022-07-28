@@ -15,12 +15,12 @@ impl<T> Node<T> {
 }
 
 pub struct SimpleLinkedList<T> {
-    head: Option<Box<Node<T>>>
+    head: Option<Box<Node<T>>>,
 }
 
 impl<T> SimpleLinkedList<T> {
     pub fn new() -> Self {
-        Self{head: None}
+        Self { head: None }
     }
 
     pub fn is_empty(&self) -> bool {
@@ -35,8 +35,10 @@ impl<T> SimpleLinkedList<T> {
     }
 
     pub fn push(&mut self, element: T) {
-        let old_head = mem::take(&mut self.head);
-        self.head = Some(Box::new(Node{element, next: old_head}));
+        self.head = Some(Box::new(Node {
+            element,
+            next: mem::take(&mut self.head),
+        }));
     }
 
     pub fn pop(&mut self) -> Option<T> {
@@ -72,7 +74,10 @@ impl<T> Default for SimpleLinkedList<T> {
 
 impl<T> FromIterator<T> for SimpleLinkedList<T> {
     fn from_iter<I: IntoIterator<Item = T>>(iter: I) -> Self {
-        iter.into_iter().fold(SimpleLinkedList::new(), |mut a, i| {a.push(i); a})
+        iter.into_iter().fold(SimpleLinkedList::new(), |mut a, i| {
+            a.push(i);
+            a
+        })
     }
 }
 
@@ -92,7 +97,7 @@ impl<T> From<SimpleLinkedList<T>> for Vec<T> {
         let mut new = Vec::with_capacity(linked_list.len());
         while !linked_list.is_empty() {
             new.insert(0, linked_list.pop().unwrap())
-        };
+        }
         new
     }
 }
