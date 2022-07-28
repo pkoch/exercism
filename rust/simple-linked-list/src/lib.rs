@@ -81,23 +81,38 @@ impl<T> FromIterator<T> for SimpleLinkedList<T> {
     }
 }
 
-// In general, it would be preferable to implement IntoIterator for SimpleLinkedList<T>
-// instead of implementing an explicit conversion to a vector. This is because, together,
-// FromIterator and IntoIterator enable conversion between arbitrary collections.
-// Given that implementation, converting to a vector is trivial:
-//
-// let vec: Vec<_> = simple_linked_list.into_iter().collect();
-//
-// The reason this exercise's API includes an explicit conversion to Vec<T> instead
-// of IntoIterator is that implementing that interface is fairly complicated, and
-// demands more of the student than we expect at this point in the track.
+impl<T> IntoIterator for SimpleLinkedList<T> {
+    type Item = T;
+
+    type IntoIter = IntoIter<T>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        let v = self.rev();
+        IntoIter{node: v.head}
+    }
+}
+
+pub struct IntoIter<T> {
+    node: Option<Box<Node<T>>>
+}
+
+impl<T> Iterator for IntoIter<T> {
+    type Item = T;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        let old_node = mem::take(&mut self.node);
+        if let None = old_node {
+            return None;
+        }
+        let old_box = old_node.unwrap();
+        let res = Some(old_box.element);
+        self.node = old_box.next;
+        res
+    }
+}
 
 impl<T> From<SimpleLinkedList<T>> for Vec<T> {
-    fn from(mut linked_list: SimpleLinkedList<T>) -> Vec<T> {
-        let mut new = Vec::with_capacity(linked_list.len());
-        while !linked_list.is_empty() {
-            new.insert(0, linked_list.pop().unwrap())
-        }
-        new
+    fn from(ll: SimpleLinkedList<T>) -> Self {
+        ll.into_iter().collect()
     }
 }
