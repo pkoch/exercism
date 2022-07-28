@@ -5,15 +5,6 @@ struct Node<T> {
     next: Option<Box<Node<T>>>,
 }
 
-impl<T> Node<T> {
-    pub fn len(&self) -> usize {
-        1 + match self.next {
-            None => 0,
-            Some(ref next) => next.len(),
-        }
-    }
-}
-
 pub struct SimpleLinkedList<T> {
     head: Option<Box<Node<T>>>,
 }
@@ -28,10 +19,13 @@ impl<T> SimpleLinkedList<T> {
     }
 
     pub fn len(&self) -> usize {
-        match self.head {
-            None => 0,
-            Some(ref node) => node.len(),
+        let mut res = 0;
+        let mut curr_node = &self.head;
+        while let Some(next_node) = curr_node {
+            res += 1;
+            curr_node = &next_node.next;
         }
+        res
     }
 
     pub fn push(&mut self, element: T) {
